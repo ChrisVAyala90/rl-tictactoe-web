@@ -1,11 +1,12 @@
 # RL Tic-Tac-Toe Web Application
 
-A web-based Tic-Tac-Toe game featuring a Q-Learning AI agent trained through reinforcement learning. Built with React frontend and FastAPI backend, demonstrating practical machine learning implementation.
+A web-based Tic-Tac-Toe game featuring a hybrid Q-Learning AI agent that combines reinforcement learning with strategic gameplay. Built with React frontend and FastAPI backend, demonstrating practical machine learning implementation.
 
 ## 🎯 Features
 
-- **Q-Learning AI Agent**: AI trained through 1M episodes of self-play
-- **Real-time Gameplay**: Play against the trained RL agent
+- **Hybrid Strategic AI**: Q-Learning enhanced with strategic blocking and winning logic
+- **Intelligent Gameplay**: AI prioritizes immediate wins and defensive blocks
+- **Real-time Training**: Train the AI through 1M episodes of self-play
 - **Modern UI**: Clean, responsive interface built with React
 - **Training Visualization**: See Q-table size and training progress
 - **Model Persistence**: Trained agents are saved and can be reused
@@ -37,27 +38,30 @@ git clone <repository-url>
 cd RL
 ```
 
-### 2. Backend Setup
+### 2. Easy Startup (Recommended)
 ```bash
-# Install Python dependencies
+# Start both frontend and backend with one command
+./start_app.sh
+```
+This will start both servers and open the application at `http://localhost:3000`
+
+### 3. Manual Setup (Alternative)
+
+**Backend:**
+```bash
 cd backend
 pip install -r requirements.txt
-
-# Start backend server
 python main.py
 ```
-Backend will run on `http://localhost:8000`
+Backend runs on `http://localhost:8000`
 
-### 3. Frontend Setup
+**Frontend:**
 ```bash
-# Install Node dependencies
 cd frontend
 npm install
-
-# Start development server
 npm run dev
 ```
-Frontend will run on `http://localhost:3000`
+Frontend runs on `http://localhost:3000`
 
 ### 4. Play!
 Open your browser to `http://localhost:3000` and start playing!
@@ -76,20 +80,26 @@ Open your browser to `http://localhost:3000` and start playing!
 
 6. **Reset Options**: Start new games or reset the AI to retrain from scratch
 
-## 🧠 Q-Learning Implementation
+## 🧠 Hybrid AI Implementation
 
-The AI uses Q-Learning, a reinforcement learning algorithm:
+The AI combines Q-Learning with strategic rule-based logic:
 
+### Q-Learning Component
 1. **State Representation**: Board positions represented as tuples
-2. **Action Selection**: Epsilon-greedy policy with exploration/exploitation
+2. **Action Selection**: Epsilon-greedy during training, greedy during gameplay
 3. **Q-Value Updates**: Bellman equation for temporal difference learning
 4. **Training Process**: 1M episodes of self-play with strategic opponents
 5. **Model Persistence**: Q-table saved as pickle file for reuse
 
+### Strategic Overlay
+1. **Immediate Win Detection**: Always takes winning moves when available
+2. **Defensive Blocking**: Automatically blocks opponent winning threats
+3. **Fallback to Q-Learning**: Uses learned strategy for complex positions
+
 **Learning Parameters**:
 - **Alpha (Learning Rate)**: 0.1
 - **Gamma (Discount Factor)**: 0.9  
-- **Epsilon (Exploration)**: Starts at 0.1, decays during training
+- **Epsilon (Exploration)**: 0.1 during training, 0.0 during gameplay
 
 ## 📁 Project Structure
 
@@ -97,7 +107,7 @@ The AI uses Q-Learning, a reinforcement learning algorithm:
 RL/
 ├── backend/
 │   ├── main.py              # FastAPI application & API endpoints
-│   ├── rl_game.py           # Q-Learning agent & game engine
+│   ├── rl_game.py           # Hybrid Q-Learning agent & game engine
 │   ├── requirements.txt     # Python dependencies
 │   └── models/
 │       └── trained_agent.pkl # Saved Q-learning model
@@ -109,6 +119,7 @@ RL/
 │   ├── index.html           # HTML template
 │   ├── package.json         # Node dependencies
 │   └── vite.config.js       # Vite configuration
+├── start_app.sh             # Easy startup script
 ├── README.md
 └── docker-compose.yml       # Container orchestration
 ```
@@ -151,15 +162,16 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 ## 🎯 Design Philosophy
 
-This project demonstrates **practical reinforcement learning implementation**:
+This project demonstrates **practical hybrid AI implementation**:
 
 - **Q-Learning fundamentals** - Core RL algorithm with clear implementation
+- **Strategic enhancement** - Rule-based logic for critical game situations
 - **Interactive training** - Users can see AI learning in real-time
 - **Clean architecture** - Minimal dependencies, maximum educational value
 - **Modern web technologies** for accessible ML demonstrations
 - **Practical persistence** - Models saved and reusable across sessions
 
-The implementation focuses on **understanding over complexity** - showing how Q-Learning works in practice rather than using black-box libraries. Perfect for learning RL concepts hands-on.
+The implementation focuses on **understanding over complexity** - showing how Q-Learning works in practice while demonstrating how to enhance RL with strategic logic. Perfect for learning hybrid AI approaches hands-on.
 
 ## 🤝 Contributing
 
