@@ -58,14 +58,65 @@ class QLearningAgent:
     def get_state(self, board):
         return tuple(board)
 
-    def choose_action(self, state, available_actions):
-        if random.uniform(0, 1) < self.epsilon:
+    def choose_action(self, state, available_actions, training=False):
+        # Only use epsilon during training, not during actual gameplay
+        if training and random.uniform(0, 1) < self.epsilon:
             return random.choice(available_actions)
         else:
+            # For gameplay, add strategic overlay to Q-learning
+            if not training:
+                strategic_move = self._get_strategic_move(state, available_actions)
+                if strategic_move is not None:
+                    return strategic_move
+            
             q_values = [self.q_table.get((state, action), 0) for action in available_actions]
             max_q = max(q_values)
             best_actions = [action for action, q_val in zip(available_actions, q_values) if q_val == max_q]
             return random.choice(best_actions)
+    
+    def _get_strategic_move(self, state, available_actions):
+        """Check for immediate win or block opportunities"""
+        board = list(state)
+        
+        # First priority: Win if possible
+        for move in available_actions:
+            temp_board = board.copy()
+            temp_board[move] = 'O'
+            if self._check_winner(temp_board, move, 'O'):
+                return move
+        
+        # Second priority: Block opponent from winning
+        for move in available_actions:
+            temp_board = board.copy()
+            temp_board[move] = 'X'
+            if self._check_winner(temp_board, move, 'X'):
+                return move
+        
+        return None
+    
+    def _check_winner(self, board, square, letter):
+        """Check if placing letter at square creates a win"""
+        # Check row
+        row_ind = square // 3
+        row = board[row_ind*3:(row_ind+1)*3]
+        if all([s == letter for s in row]):
+            return True
+        
+        # Check column
+        col_ind = square % 3
+        column = [board[col_ind+i*3] for i in range(3)]
+        if all([s == letter for s in column]):
+            return True
+        
+        # Check diagonals
+        if square % 2 == 0:
+            diagonal1 = [board[i] for i in [0, 4, 8]]
+            if all([s == letter for s in diagonal1]):
+                return True
+            diagonal2 = [board[i] for i in [2, 4, 6]]
+            if all([s == letter for s in diagonal2]):
+                return True
+        return False
 
     def update_q_value(self, state, action, reward, next_state, done):
         old_value = self.q_table.get((state, action), 0)
@@ -116,7 +167,7 @@ def train_agent(episodes=10000):
             if not available_moves:
                 break
                 
-            action = agent.choose_action(state, available_moves)
+            action = agent.choose_action(state, available_moves, training=True)
             game.make_move(action, 'X')
             
             next_state = agent.get_state(game.board)
