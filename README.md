@@ -1,29 +1,28 @@
 # RL Tic-Tac-Toe Web Application
 
-A modern web-based Tic-Tac-Toe game with AI opponents of varying difficulty levels. Built with React frontend and FastAPI backend, featuring rule-based AI that provides genuine strategic challenge.
+A web-based Tic-Tac-Toe game featuring a Q-Learning AI agent trained through reinforcement learning. Built with React frontend and FastAPI backend, demonstrating practical machine learning implementation.
 
 ## 🎯 Features
 
-- **3 Difficulty Levels**: Easy, Medium, and Hard AI opponents
-- **Rule-Based AI**: Simple but effective strategic play (no training required!)
-- **Multiple Game Modes**: Classic 3×3 and Enhanced 4×4 with special cells
-- **Modern UI**: Clean, responsive interface built with React and Tailwind CSS
-- **Real-time Gameplay**: Instant AI responses with strategic positioning
-- **Game Statistics**: Track wins, losses, and draws
-- **Clean Codebase**: Simplified architecture focused on what works
+- **Q-Learning AI Agent**: AI trained through 1M episodes of self-play
+- **Interactive Training**: Train your own AI agent from scratch
+- **Real-time Gameplay**: Play against the trained RL agent
+- **Modern UI**: Clean, responsive interface built with React
+- **Training Visualization**: See Q-table size and training progress
+- **Model Persistence**: Trained agents are saved and can be reused
+- **Clean Architecture**: Streamlined codebase focused on RL fundamentals
 
 ## 🏗️ Architecture
 
-### Frontend (React + Vite + Tailwind)
+### Frontend (React + Vite)
 - **React 18** with modern hooks
 - **Vite** for fast development and building
-- **Tailwind CSS** for responsive styling
-- **Lucide React** for icons
+- **Clean CSS** for responsive styling
 
 ### Backend (FastAPI + Python)
 - **FastAPI** for REST API
 - **Python 3.8+** with type hints
-- **Rule-based AI** with strategic logic
+- **Q-Learning Agent** with pickle persistence
 - **CORS enabled** for frontend integration
 
 ## 🚀 Quick Start
@@ -42,11 +41,11 @@ cd RL
 ### 2. Backend Setup
 ```bash
 # Install Python dependencies
-pip install fastapi uvicorn
+cd backend
+pip install -r requirements.txt
 
 # Start backend server
-cd backend
-python -m api.main
+python main.py
 ```
 Backend will run on `http://localhost:8000`
 
@@ -66,82 +65,71 @@ Open your browser to `http://localhost:3000` and start playing!
 
 ## 🎮 How to Play
 
-1. **Select Difficulty**:
-   - **Easy**: 40% random moves (casual play)
-   - **Medium**: 10% random moves (good challenge) 
-   - **Hard**: 0% random moves (perfect strategic play)
+1. **Train the AI**: First time users need to train the Q-Learning agent (takes a few moments)
 
-2. **Choose Game Mode**:
-   - **Classic 3×3**: Traditional tic-tac-toe
-   - **Enhanced 4×4**: Larger board with special cells
+2. **Start Game**: Click "Start New Game" to begin playing
 
 3. **Make Your Move**: Click any empty cell to place your mark (X)
 
-4. **AI Responds**: The AI will automatically make its move (O)
+4. **AI Responds**: The trained RL agent will automatically make its move (O)
 
-5. **Win Conditions**: Get 3 (or 4) in a row horizontally, vertically, or diagonally
+5. **Win Conditions**: Get 3 in a row horizontally, vertically, or diagonally
 
-## 🧠 AI Strategy
+6. **Reset Options**: Start new games or reset the AI to retrain from scratch
 
-The AI uses a simple but effective rule-based approach:
+## 🧠 Q-Learning Implementation
 
-1. **Win if possible** - Take any winning move immediately
-2. **Block opponent wins** - Prevent human from winning
-3. **Strategic positioning**:
-   - Prefer center control (3×3)
-   - Take corners when available
-   - Fall back to edges only when necessary
+The AI uses Q-Learning, a reinforcement learning algorithm:
 
-Difficulty is controlled by introducing controlled randomness:
-- **Easy**: Makes random moves 40% of the time
-- **Medium**: Makes random moves 10% of the time  
-- **Hard**: Always plays optimally (never loses, only wins or draws)
+1. **State Representation**: Board positions represented as tuples
+2. **Action Selection**: Epsilon-greedy policy with exploration/exploitation
+3. **Q-Value Updates**: Bellman equation for temporal difference learning
+4. **Training Process**: 1M episodes of self-play with strategic opponents
+5. **Model Persistence**: Q-table saved as pickle file for reuse
+
+**Learning Parameters**:
+- **Alpha (Learning Rate)**: 0.1
+- **Gamma (Discount Factor)**: 0.9  
+- **Epsilon (Exploration)**: Starts at 0.1, decays during training
 
 ## 📁 Project Structure
 
 ```
 RL/
 ├── backend/
-│   ├── api/
-│   │   ├── main.py              # FastAPI application
-│   │   ├── simple_game_routes.py # Game API endpoints
-│   │   └── models.py            # Pydantic models
+│   ├── main.py              # FastAPI application & API endpoints
+│   ├── rl_game.py           # Q-Learning agent & game engine
+│   ├── requirements.txt     # Python dependencies
 │   └── models/
-│       ├── simple_ai.py         # Rule-based AI implementation
-│       └── game_engine.py       # Core game logic
+│       └── trained_agent.pkl # Saved Q-learning model
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── DifficultySelector.jsx # Difficulty selection UI
-│   │   │   ├── GameBoard.jsx          # Game board component
-│   │   │   └── GameStats.jsx          # Statistics display
-│   │   ├── hooks/
-│   │   │   ├── useAPI.js             # API communication
-│   │   │   └── useGameState.js       # Game state management
-│   │   ├── utils/
-│   │   │   └── gameLogic.js          # Game utilities
-│   │   └── App.jsx               # Main application
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── App.jsx          # Main React application
+│   │   ├── main.jsx         # React entry point
+│   │   └── index.css        # Styling
+│   ├── index.html           # HTML template
+│   ├── package.json         # Node dependencies
+│   └── vite.config.js       # Vite configuration
 ├── README.md
-└── .gitignore
+└── docker-compose.yml       # Container orchestration
 ```
 
 ## 🔧 API Endpoints
 
-- `GET /game/difficulties` - Get available difficulty levels
-- `POST /game/start` - Start a new game
-- `POST /game/move` - Make a player move
-- `GET /game/stats/{game_id}` - Get game statistics
-- `POST /game/reset/{game_id}` - Reset game
-- `DELETE /game/end/{game_id}` - End game
+- `GET /` - API status check
+- `POST /start` - Start a new game session
+- `POST /move` - Make a player move and get AI response
+- `POST /train` - Train the Q-Learning agent
+- `POST /reset/{game_id}` - Reset current game
+- `POST /reset_ai` - Delete trained model and reset AI
+- `GET /status` - Get training status and Q-table size
 
 ## 🛠️ Development
 
 ### Backend Development
 ```bash
 cd backend
-python -m api.main
+python main.py
 # Server runs with auto-reload enabled
 ```
 
@@ -159,20 +147,20 @@ cd frontend
 npm run build
 
 # Backend can be deployed with uvicorn
-uvicorn api.main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ## 🎯 Design Philosophy
 
-This project demonstrates that **simple approaches often work best**:
+This project demonstrates **practical reinforcement learning implementation**:
 
-- **Rule-based AI** over complex machine learning for deterministic games
-- **Strategic positioning** with controlled randomness for difficulty levels
-- **Clean, focused UI** that prioritizes user experience
-- **Modern web technologies** for responsiveness and maintainability
-- **Lean codebase** with minimal dependencies and maximum clarity
+- **Q-Learning fundamentals** - Core RL algorithm with clear implementation
+- **Interactive training** - Users can see AI learning in real-time
+- **Clean architecture** - Minimal dependencies, maximum educational value
+- **Modern web technologies** for accessible ML demonstrations
+- **Practical persistence** - Models saved and reusable across sessions
 
-The AI is immediately ready (no training required) and provides genuine strategic challenge, especially on Hard difficulty where it plays perfectly. This project was cleaned of complex RL infrastructure to focus on what actually works.
+The implementation focuses on **understanding over complexity** - showing how Q-Learning works in practice rather than using black-box libraries. Perfect for learning RL concepts hands-on.
 
 ## 🤝 Contributing
 
@@ -189,5 +177,5 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 🎉 Acknowledgments
 
 - Built with modern web technologies for optimal performance
-- Inspired by classic game theory and strategic play
-- Designed for both casual players and competitive challenge
+- Demonstrates practical reinforcement learning concepts
+- Designed for educational understanding of Q-Learning algorithms
