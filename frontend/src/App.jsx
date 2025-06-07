@@ -1,211 +1,241 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Wifi, WifiOff } from 'lucide-react';
-import DifficultySelector from './components/DifficultySelector';
-import GameBoard from './components/GameBoard';
-import GameStats from './components/GameStats';
-import { useGameState } from './hooks/useGameState';
-import { GAME_STATES } from './utils/gameLogic';
+import { useState, useEffect } from 'react'
 
-const ConnectionStatus = ({ isConnected, onRetry }) => (
-  <div className={`fixed top-4 right-4 z-50 flex items-center space-x-2 px-4 py-2 rounded-lg shadow-lg ${
-    isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }`}>
-    {isConnected ? (
-      <>
-        <Wifi className="w-4 h-4" />
-        <span className="text-sm font-medium">Connected</span>
-      </>
-    ) : (
-      <>
-        <WifiOff className="w-4 h-4" />
-        <span className="text-sm font-medium">Disconnected</span>
-        <button
-          onClick={onRetry}
-          className="text-xs bg-red-200 hover:bg-red-300 px-2 py-1 rounded"
-        >
-          Retry
-        </button>
-      </>
-    )}
-  </div>
-);
-
-const ErrorBanner = ({ error, onDismiss }) => (
-  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-    <div className="flex items-start">
-      <AlertCircle className="w-5 h-5 text-red-500 mr-3 mt-0.5" />
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-red-800">Error</h3>
-        <p className="text-sm text-red-700 mt-1">{error}</p>
-      </div>
-      <button
-        onClick={onDismiss}
-        className="text-red-500 hover:text-red-700 ml-3"
-      >
-        ×
-      </button>
-    </div>
-  </div>
-);
+const API_URL = 'http://127.0.0.1:8000'
 
 function App() {
-  const [difficulties, setDifficulties] = useState(null);
-  const [isConnected, setIsConnected] = useState(true);
-  const [gameSize, setGameSize] = useState(3);
-  
-  const {
-    gameState,
-    board,
-    gameSize: currentGameSize,
-    specialCells,
-    winner,
-    difficulty,
-    difficultyInfo,
-    gameMessage,
-    isAIThinking,
-    gameStats,
-    loading,
-    error,
-    setError,
-    startGame,
-    makeMove,
-    resetGame,
-    playAgain,
-    getDifficulties,
-    checkHealth,
-  } = useGameState();
+  const [gameId, setGameId] = useState(null)
+  const [board, setBoard] = useState(Array(9).fill(' '))
+  const [winner, setWinner] = useState(null)
+  const [gameOver, setGameOver] = useState(false)
+  const [isTraining, setIsTraining] = useState(false)
+  const [isTrained, setIsTrained] = useState(false)
+  const [qTableSize, setQTableSize] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-  // Check backend connection and load difficulties
+  // Check training status on load
   useEffect(() => {
-    const initializeApp = async () => {
+    checkStatus()
+  }, [])
+
+  // Ensure we start on training screen when not trained
+  useEffect(() => {
+    if (!loading && !isTrained) {
+      setGameId(null)
+      setBoard(Array(9).fill(' '))
+      setWinner(null)
+      setGameOver(false)
+    }
+  }, [loading, isTrained])
+
+  const checkStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/status`)
+      const data = await response.json()
+      setIsTrained(data.is_trained)
+      setQTableSize(data.q_table_size)
+    } catch (error) {
+      console.error('Failed to check status:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startNewGame = async () => {
+    try {
+      const response = await fetch(`${API_URL}/start`, { method: 'POST' })
+      const data = await response.json()
+      
+      setGameId(data.game_id)
+      setBoard(data.board)
+      setWinner(data.winner)
+      setGameOver(data.game_over)
+      setIsTrained(data.is_trained)
+    } catch (error) {
+      console.error('Failed to start game:', error)
+    }
+  }
+
+  const makeMove = async (position) => {
+    if (board[position] !== ' ' || gameOver) return
+
+    try {
+      const response = await fetch(`${API_URL}/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game_id: gameId, position })
+      })
+      
+      const data = await response.json()
+      setBoard(data.board)
+      setWinner(data.winner)
+      setGameOver(data.game_over)
+    } catch (error) {
+      console.error('Failed to make move:', error)
+    }
+  }
+
+  const trainAgent = async () => {
+    setIsTraining(true)
+    try {
+      const response = await fetch(`${API_URL}/train`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ episodes: 1000000 })
+      })
+      
+      const data = await response.json()
+      setIsTrained(true)
+      setQTableSize(data.q_table_size)
+      alert(`Training completed! Q-table has ${data.q_table_size} entries.`)
+    } catch (error) {
+      console.error('Failed to train agent:', error)
+      alert('Training failed. Please try again.')
+    } finally {
+      setIsTraining(false)
+    }
+  }
+
+  const resetGame = async () => {
+    if (!gameId) return
+    
+    try {
+      const response = await fetch(`${API_URL}/reset/${gameId}`, { method: 'POST' })
+      const data = await response.json()
+      
+      setBoard(data.board)
+      setWinner(data.winner)
+      setGameOver(data.game_over)
+    } catch (error) {
+      console.error('Failed to reset game:', error)
+    }
+  }
+
+  const resetAI = async () => {
+    if (confirm('This will delete the trained AI and return to the training screen. Are you sure?')) {
       try {
-        // Check backend health
-        await checkHealth();
-        setIsConnected(true);
+        const response = await fetch(`${API_URL}/reset_ai`, { method: 'POST' })
+        const data = await response.json()
         
-        // Load difficulties
-        const difficultiesData = await getDifficulties();
-        setDifficulties(difficultiesData);
-      } catch (err) {
-        console.error('Failed to initialize app:', err);
-        setIsConnected(false);
+        // Reset all state to initial
+        setGameId(null)
+        setBoard(Array(9).fill(' '))
+        setWinner(null)
+        setGameOver(false)
+        setIsTrained(false)
+        setQTableSize(0)
+        
+        alert('AI has been reset. You can now train a new model.')
+      } catch (error) {
+        console.error('Failed to reset AI:', error)
+        alert('Failed to reset AI. Please try again.')
       }
-    };
-
-    initializeApp();
-  }, [checkHealth, getDifficulties]);
-
-  // Handle connection retry
-  const handleRetryConnection = async () => {
-    try {
-      await checkHealth();
-      setIsConnected(true);
-      const difficultiesData = await getDifficulties();
-      setDifficulties(difficultiesData);
-      setError(null);
-    } catch (err) {
-      setIsConnected(false);
     }
-  };
+  }
 
-  // Handle difficulty selection and game start
-  const handleDifficultySelect = async (selectedDifficulty, selectedGameSize) => {
-    try {
-      await startGame(selectedDifficulty, selectedGameSize);
-    } catch (err) {
-      console.error('Failed to start game:', err);
+  const getStatusText = () => {
+    if (gameOver) {
+      if (winner === 'X') return "🎉 You Won!"
+      if (winner === 'O') return "🤖 AI Won!"
+      return "🤝 It's a Draw!"
     }
-  };
+    return "Your turn! Click a cell to play."
+  }
 
-  // Handle cell click in game
-  const handleCellClick = async (position) => {
-    try {
-      await makeMove(position);
-    } catch (err) {
-      console.error('Failed to make move:', err);
+  const getStatusClass = () => {
+    if (gameOver) {
+      if (winner === 'X') return "status winning"
+      if (winner === 'O') return "status losing"
+      return "status draw"
     }
-  };
+    return "status"
+  }
 
-  // Handle game size change
-  const handleGameSizeChange = (size) => {
-    setGameSize(size);
-  };
-
-  // Handle new game
-  const handleNewGame = () => {
-    resetGame();
-  };
-
-  // Handle play again
-  const handlePlayAgain = () => {
-    playAgain();
-  };
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>Loading RL Tic-Tac-Toe...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Connection Status */}
-      <ConnectionStatus 
-        isConnected={isConnected} 
-        onRetry={handleRetryConnection} 
-      />
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Error Banner */}
-        {error && (
-          <ErrorBanner 
-            error={error} 
-            onDismiss={() => setError(null)} 
-          />
-        )}
-
-        {/* Main Content */}
-        {gameState === GAME_STATES.SETUP ? (
-          <DifficultySelector
-            onSelect={handleDifficultySelect}
-            onSizeChange={handleGameSizeChange}
-            difficulties={difficulties}
-            loading={loading}
-            error={!isConnected ? 'Cannot connect to backend server' : null}
-          />
-        ) : (
-          <div className="space-y-8">
-            {/* Game Board */}
-            <GameBoard
-              board={board}
-              size={currentGameSize}
-              onCellClick={handleCellClick}
-              disabled={loading || !isConnected}
-              specialCells={specialCells}
-              winner={winner}
-              difficulty={difficulty}
-              difficultyInfo={difficultyInfo}
-              gameMessage={gameMessage}
-              isAIThinking={isAIThinking}
-              onPlayAgain={handlePlayAgain}
-              onNewGame={handleNewGame}
-              gameState={gameState}
-            />
-
-            {/* Game Statistics */}
-            <GameStats 
-              stats={gameStats}
-              className="max-w-2xl mx-auto"
-            />
-          </div>
-        )}
-
-        {/* Footer */}
-        <footer className="text-center mt-12 text-gray-500 text-sm">
-          <p>
-            RL Tic-Tac-Toe - AI agents trained with Reinforcement Learning
-          </p>
-          <p className="mt-1">
-            Choose different difficulty levels to play against AI with varying training experience
-          </p>
-        </footer>
+    <div className="container">
+      <div className="header">
+        <h1 className="title">🤖 RL Tic-Tac-Toe</h1>
+        <p className="subtitle">Play against a Q-Learning AI Agent</p>
       </div>
+
+      {!isTrained && (
+        <div className="game-card training-card">
+          <h3>🧠 AI Training Required</h3>
+          <p>The AI agent needs to be trained before you can play. This will take a few moments.</p>
+          <div className="controls" style={{ marginTop: '1rem' }}>
+            <button 
+              className="btn btn-success"
+              onClick={trainAgent}
+              disabled={isTraining}
+            >
+              {isTraining ? 'Training...' : 'Train AI (1M episodes)'}
+            </button>
+          </div>
+          {isTraining && (
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <div className="spinner"></div>
+              <p>Training in progress... Please wait.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isTrained && (
+        <div className="game-card">
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <span>🧠 AI Trained</span>
+            <span className="trained-badge">{qTableSize.toLocaleString()} Q-values</span>
+          </div>
+
+          {!gameId ? (
+            <div className="controls">
+              <button className="btn btn-primary" onClick={startNewGame}>
+                Start New Game
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className={getStatusClass()}>
+                {getStatusText()}
+              </div>
+
+              <div className="board">
+                {board.map((cell, index) => (
+                  <button
+                    key={index}
+                    className={`cell ${cell.toLowerCase()} ${gameOver ? 'disabled' : ''}`}
+                    onClick={() => makeMove(index)}
+                    disabled={gameOver || cell !== ' '}
+                  >
+                    {cell !== ' ' ? cell : ''}
+                  </button>
+                ))}
+              </div>
+
+              <div className="controls">
+                <button className="btn btn-primary" onClick={startNewGame}>
+                  New Game
+                </button>
+                <button className="btn btn-secondary" onClick={resetAI} style={{ backgroundColor: '#ef4444' }}>
+                  Reset AI
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
