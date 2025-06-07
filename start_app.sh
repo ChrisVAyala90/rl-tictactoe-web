@@ -12,7 +12,7 @@ sleep 2
 # Start backend in background
 echo "🚀 Starting backend server..."
 cd /Users/chrisvayala/RL/backend
-python3 -m uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload > backend.log 2>&1 &
+python3 -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload > backend.log 2>&1 &
 BACKEND_PID=$!
 echo "Backend PID: $BACKEND_PID"
 
