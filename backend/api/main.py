@@ -62,15 +62,7 @@ async def health_check():
 async def startup_event():
     """Initialize the application"""
     print("Starting RL Tic-Tac-Toe API...")
-    print("Check if models are trained...")
-    
-    # You can add model validation here
-    models_dir = os.path.join(os.path.dirname(__file__), "../models/model_checkpoints")
-    if not os.path.exists(models_dir):
-        print("Models directory not found. Please train models first.")
-    else:
-        model_files = os.listdir(models_dir)
-        print(f"Found {len(model_files)} model files: {model_files}")
+    print("Simple rule-based AI ready - no training required!")
 
 if __name__ == "__main__":
     uvicorn.run(

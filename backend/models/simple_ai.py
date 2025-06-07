@@ -167,39 +167,18 @@ class SimpleTicTacToeEngine:
         }
 
 
-# For backward compatibility with existing API
-class AITacAgentSimple:
-    """Simple wrapper to match existing API interface"""
-    
-    def __init__(self, difficulty: str = "medium"):
-        self.ai = SimpleAI(difficulty)
-        self.difficulty = difficulty
-    
-    def choose_action(self, state: tuple, available_actions: List[int], training: bool = False) -> int:
-        """Choose action - compatible with existing interface"""
-        # Convert state tuple back to game
-        game = TicTacToe(int(len(state) ** 0.5))
-        game.board = list(state)
-        
-        return self.ai.get_move(game, 'O')
-    
-    def get_state(self, board: List[str]) -> tuple:
-        """Convert board to state - for compatibility"""
-        return tuple(board)
-
-
-def create_simple_models():
-    """Create simple AI models for all difficulties"""
-    difficulties = ["easy", "medium", "hard"]
-    
-    print("Creating simple AI models...")
-    for difficulty in difficulties:
-        ai = AITacAgentSimple(difficulty)
-        print(f"✓ {difficulty.capitalize()} AI ready (randomness: {ai.ai.randomness[difficulty]*100:.0f}%)")
-    
-    print("\nSimple AI models created successfully!")
-    print("These are immediately ready - no training required!")
-    return True
 
 if __name__ == "__main__":
-    create_simple_models()
+    # Test the simple AI
+    game = TicTacToe()
+    ai = SimpleAI("hard")
+    
+    print("Testing Simple AI (Hard difficulty):")
+    print("Initial board:")
+    game.print_board()
+    
+    # Make a move
+    move = ai.get_move(game, 'O')
+    print(f"AI chooses position: {move}")
+    game.make_move(move, 'O')
+    game.print_board()

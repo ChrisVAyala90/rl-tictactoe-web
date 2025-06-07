@@ -5,11 +5,12 @@ A modern web-based Tic-Tac-Toe game with AI opponents of varying difficulty leve
 ## 🎯 Features
 
 - **3 Difficulty Levels**: Easy, Medium, and Hard AI opponents
-- **Rule-Based AI**: Simple but effective strategic play (no complex training needed)
+- **Rule-Based AI**: Simple but effective strategic play (no training required!)
 - **Multiple Game Modes**: Classic 3×3 and Enhanced 4×4 with special cells
 - **Modern UI**: Clean, responsive interface built with React and Tailwind CSS
 - **Real-time Gameplay**: Instant AI responses with strategic positioning
 - **Game Statistics**: Track wins, losses, and draws
+- **Clean Codebase**: Simplified architecture focused on what works
 
 ## 🏗️ Architecture
 
@@ -169,8 +170,9 @@ This project demonstrates that **simple approaches often work best**:
 - **Strategic positioning** with controlled randomness for difficulty levels
 - **Clean, focused UI** that prioritizes user experience
 - **Modern web technologies** for responsiveness and maintainability
+- **Lean codebase** with minimal dependencies and maximum clarity
 
-The AI is immediately ready (no training required) and provides genuine strategic challenge, especially on Hard difficulty where it plays perfectly.
+The AI is immediately ready (no training required) and provides genuine strategic challenge, especially on Hard difficulty where it plays perfectly. This project was cleaned of complex RL infrastructure to focus on what actually works.
 
 ## 🤝 Contributing
 
