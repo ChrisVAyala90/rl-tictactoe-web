@@ -5,7 +5,6 @@ A web-based Tic-Tac-Toe game featuring a Q-Learning AI agent trained through rei
 ## 🎯 Features
 
 - **Q-Learning AI Agent**: AI trained through 1M episodes of self-play
-- **Interactive Training**: Train your own AI agent from scratch
 - **Real-time Gameplay**: Play against the trained RL agent
 - **Modern UI**: Clean, responsive interface built with React
 - **Training Visualization**: See Q-table size and training progress
