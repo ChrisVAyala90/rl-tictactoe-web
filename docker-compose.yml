@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: rl-tictactoe-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/models/model_checkpoints:/app/models/model_checkpoints
+    environment:
+      - PYTHONPATH=/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: rl-tictactoe-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Optional: Service to train models
+  trainer:
+    build: ./backend
+    container_name: rl-tictactoe-trainer
+    volumes:
+      - ./backend/models/model_checkpoints:/app/models/model_checkpoints
+    environment:
+      - PYTHONPATH=/app
+    command: python train_models.py
+    profiles:
+      - training  # Only run when explicitly specified
+
+volumes:
+  model_checkpoints:
